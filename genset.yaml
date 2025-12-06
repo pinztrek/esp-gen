@@ -29,6 +29,15 @@ wifi:
     ssid: "Blink Fallback Hotspot"
     password: "esphomepw"
 
+  on_connect:
+    then:
+      - light.turn_on:
+          id: rgb_led_display
+          brightness: 50%
+          red: 100%
+          green: 0%
+          blue: 100%
+
 #-------------------------------------------------------
 # Homeassistant I/O code
 output: 
