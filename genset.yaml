@@ -155,12 +155,51 @@ binary_sensor:
             green: 0%
             blue: 100%
 
+#------------------------------------------------------
+# Display st7789
 
+# --- 1. SPI Bus Configuration ---
+spi:
+  id: spi_bus_display
+  clk_pin: GPIO18 # SCLK
+  mosi_pin: GPIO19 # MOSI
+
+# --- 2. Font Definition ---
+font:
+  - file: "gfonts://Roboto Mono"
+    size: 16
+    id: display_font
+
+# --- 3. ST7789 Display Component  ---
+display:
+  - platform: st7789v
+    id: pico_display
+    
+    # Using the correct model for proper initialization (240x135 screen)
+    model: TTGO TDisplay 135x240 
+    
+    spi_id: spi_bus_display
+    cs_pin: GPIO17
+    dc_pin: GPIO16
+    backlight_pin: GPIO20
+    rotation: 270 
+    
+    lambda: |-
+      float temp_c = id(pico_chip_temperature).state;
+      float temp_f = (temp_c * 9.0 / 5.0) + 32.0; // Perform C to F conversion <--- FIX IS HERE
+      
+      it.print(0, 0, id(display_font), "Pico Display Pack");
+      
+      // Display Celsius value
+      it.printf(0, 20, id(display_font), "C: %.1f C", temp_c);
+      
+      // Display Fahrenheit value
+      it.printf(0, 40, id(display_font), "F: %.1f F", temp_f);
 
 #-------------------------------------------------------
-# sensor: (This block is fine as it's not duplicated)
 sensor:
   - platform: internal_temperature
+    id: pico_chip_temperature
     name: "Pico Chip Temperature"
     update_interval: 60s
     accuracy_decimals: 1
