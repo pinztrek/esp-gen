@@ -5,6 +5,7 @@ esphome:
 rp2040:
   board: rpipicow
 
+
 # Enable logging
 logger:
 
@@ -23,39 +24,21 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-  #power_save_mode: none
-
-  on_connect:
-    then:
-      - light.turn_on:
-          id: rgb_led_display
-          brightness: 50%
-          red: 100%
-          green: 0%
-          blue: 100%
-
   # Enable fallback hotspot in case wifi connection fails
   ap:
     ssid: "Blink Fallback Hotspot"
     password: "esphomepw"
 
 #-------------------------------------------------------
-# Homeassistant I/O code 
-output:  # <--- ONLY ONE 'output:' KEY ALLOWED
- 
+# Homeassistant I/O code
+output: 
+  
   # 1. Built-in LED (GPIO 25)
-  - platform: rp2040_pwm # <--- Use PWM output to make 'light: binary' happy
-    pin: 25
-    id: onboard_led_output
-    frequency: 1000Hz # Required for PWM outputs
+  #- platform: rp2040_pwm # <--- Use PWM output to make 'light: binary' happy
+  #  pin: 25
+    #id: onboard_led_output
+    #frequency: 1000Hz # Required for PWM outputs
   
-  # 2. External LED (GPIO 22)
-  - platform: gpio
-    pin: 22
-    id: external_led_pin
-  
-  # ... (Built-in LED, External LED output blocks remain the same)
-
   # Pi Moroni LED Red (GPIO 6) - MUST BE rp2040_pwm for dimming
   - platform: rp2040_pwm
     pin: GPIO6
@@ -84,17 +67,11 @@ output:  # <--- ONLY ONE 'output:' KEY ALLOWED
 light: # <--- ONLY ONE 'light:' KEY ALLOWED
   
   # 1. Built-in LED Light
-  - platform: binary 
-    output: onboard_led_output
-    name: "Pico Built-in LED"
+  #- platform: binary 
+    #output: onboard_led_output
+    #name: "Pico Built-in LED"
 
-  # 2. External LED Light
-  - platform: binary 
-    output: external_led_pin
-    name: "Pico Test LED"
-    id: test_led_light
-
-  # 3. Pi Moroni Display RGB LED - MERGED FROM DUPLICATE BLOCK
+  # 3. Pi Moroni Display RGB LED 
   - platform: rgb
     name: "Pico Display RGB LED"
     id: rgb_led_display
@@ -103,92 +80,5 @@ light: # <--- ONLY ONE 'light:' KEY ALLOWED
     blue: led_b
 #-------------------------------------------------------
 
-binary_sensor:
 
-  # 1. External Button (GPIO 21) - Use a single action
-  - platform: gpio
-    pin:
-      number: 21
-      mode: INPUT_PULLUP 
-      inverted: true
-    name: "Pico Test Button"
-    device_class: moving
-    on_press:
-      then:
-        - logger.log: "Test Button Pressed!"
-        - light.toggle: 
-            id: test_led_light
-
-  # 2. Display Button A (GPIO 12) - Toggle
-  - platform: gpio
-    pin:
-      number: GPIO12
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button A"
-    on_press:
-      then:
-        - light.toggle:
-            id: rgb_led_display
-
-  # 3. Display Button B (GPIO 13) - Red
-  - platform: gpio
-    pin:
-      number: GPIO13
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button B"
-    on_press:
-      then:
-        - light.turn_on:
-            id: rgb_led_display
-            brightness: 75%
-            red: 100%
-            green: 0
-            blue: 0
-
-  # 4. Display Button X (GPIO 14) - Green
-  - platform: gpio
-    pin:
-      number: GPIO14
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button X"
-    on_press:
-      then:
-        - light.turn_on:
-            id: rgb_led_display
-            #rgb_color: [0, 255, 0] # GREEN
-            brightness: 75%
-            red: 0%
-            green: 100%
-            blue: 0
-
-  # 5. Display Button Y (GPIO 15) - Blue
-  - platform: gpio
-    pin:
-      number: GPIO15
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button Y"
-    on_press:
-      then:
-        - light.turn_on:
-            id: rgb_led_display
-            #rgb_color:0 [0, 0, 255] # BLUE
-            brightness: 75%
-            red: 0%
-            green: 0%
-            blue: 100%
-
-
-# 3. Add entries for Display Button B (GPIO 13), X (GPIO 14), and Y (GPIO 15) here...
-
-#-------------------------------------------------------
-# sensor: (This block is fine as it's not duplicated)
-sensor:
-  - platform: internal_temperature
-    name: "Pico Chip Temperature"
-    update_interval: 60s
-    accuracy_decimals: 1
 
