@@ -27,30 +27,28 @@ wifi:
     ssid: "Blink Fallback Hotspot"
     password: "esphomepw"
 
-  # --- RESTORED: On Connect Action for Internal LED ---
+  # --- On Connect Action for Internal LED ---
   on_connect:
     then:
       - light.turn_on:
           id: onboard_led_light
-          # Using a standard 100% brightness for the simple binary LED
           brightness: 100% 
 
 #-------------------------------------------------------
 # Homeassistant I/O code
 output: 
   
-  # --- ADDED: Output for Built-in LED (GPIO 25) ---
+  # Output for Built-in LED (GPIO 25)
   - platform: gpio
     pin: GPIO25
     id: onboard_led_output
-    # The Pico W LED requires a simple HIGH/LOW signal (not PWM)
     
 #-------------------------------------------------------
 
-# --- LIGHT COMPONENTS (START OF SINGLE LIGHT BLOCK) ---
-light: # <--- ONLY ONE 'light:' KEY ALLOWED
+# --- LIGHT COMPONENTS ---
+light: 
   
-  # --- ADDED: Built-in LED Light component ---
+  # Built-in LED Light component
   - platform: binary
     output: onboard_led_output
     id: onboard_led_light
@@ -60,50 +58,21 @@ light: # <--- ONLY ONE 'light:' KEY ALLOWED
 # --- binary_sensor section remains empty ---
 
 #------------------------------------------------------
-# Display ssd1306
-
-# --- 1. I2C Bus Configuration for SSD1306 ---
-i2c:
-  id: i2c_bus_display
-  sda: GPIO4 
-  scl: GPIO5
-  scan: true
-
-# --- 2. Internal Font Definition ---
-font:
-  - platform: arial
-    id: display_font
-    # The 'arial' font, like 'tiny', is a dedicated platform and requires no size or glyphs.
-
-# --- 3. SSD1306 Display Component ---
-display:
-  - platform: ssd1306_i2c
-    id: pico_display
-    
-    model: "SSD1306 128x64"
-    
-    i2c_id: i2c_bus_display
-    address: 0x3C
-    
-    lambda: |-
-      float temp_c = id(pico_chip_temperature).state;
-      float temp_f = (temp_c * 9.0 / 5.0) + 32.0;
-      
-      // The arial font is approx. 8 pixels high (similar to internal size 6).
-      // Keeping the spacing at 10 pixels is appropriate for readability.
-      
-      it.print(0, 0, id(display_font), "Chip Temperature:");
-      
-      // Display Celsius value
-      it.printf(0, 10, id(display_font), "C: %.1f C", temp_c);
-      
-      // Display Fahrenheit value
-      it.printf(0, 20, id(display_font), "F: %.1f F", temp_f);
-
-#-------------------------------------------------------
+# Sensors & Text Sensors
 sensor:
   - platform: internal_temperature
     id: pico_chip_temperature
     name: "Pico Chip Temperature"
     update_interval: 60s
     accuracy_decimals: 1
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "Current IP Address"
+      id: ip_address_sensor
+      update_interval: 10s
+
+#------------------------------------------------------
+# Display Configuration: Pulled in from external file
+<<: !include functions.yaml
