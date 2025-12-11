@@ -49,13 +49,13 @@ display:
       print_line(2, "Pico Temp: %.1f C", temp_c);
       
       // Line 3: Battery Voltage & Armed Status
-      print_line(3, "Batt: %.2fV | Armed: %s", batt_v, bool_to_str(id(armed_status).state));
+      print_line(3, "Batt: %.2fV | Armed: %s", batt_v, bool_to_str(id(armed).state)); # <-- Uses id(armed)
       
       // Line 4: Run Enabled & Starting 
-      print_line(4, "Run: %s | Start: %s", bool_to_str(id(run_enabled).state), bool_to_str(id(starting_status).state));
+      print_line(4, "Run: %s | Start: %s", bool_to_str(id(run_enabled).state), bool_to_str(id(starting).state));
       
       // Line 5: Mains Status & Alarm 
-      print_line(5, "Mains: %s | Alarm: %s", bool_to_str(id(mains_contact).state), bool_to_str(id(alarm).state));
+      print_line(5, "Mains: %s | Alarm: %s", bool_to_str(id(mains).state), bool_to_str(id(alarm).state)); # <-- Uses id(mains)
       
       // Line 6: Low Oil / Overtemp 
       print_line(6, "LoOil: %s | OverT: %s", bool_to_str(id(low_oil).state), bool_to_str(id(over_temp).state));
@@ -63,8 +63,8 @@ display:
       // Line 7: Overcrank / Overspeed 
       print_line(7, "OvrCrank: %s | OvrSpd: %s", bool_to_str(id(over_crank).state), bool_to_str(id(over_speed).state));
       
-      // Line 8: Transfer Switch & Spare 1
-      print_line(8, "Xfer Sw: %s | Spare 1: %s", bool_to_str(id(xfer_sw).state), bool_to_str(id(spare_1).state));
-      
-      // Line 9: Generator Phase Status
-      print_line(9, "P1: %s | P2: %s", bool_to_str(id(gen_phase_1).state), bool_to_str(id(gen_phase_2).state));
+      // Line 8: Generator Phase Status
+      print_line(8, "P1: %s | P2: %s", bool_to_str(id(gen_phase_1).state), bool_to_str(id(gen_phase_2).state));
+
+      // Line 9: MQTT IP & Status Placeholder
+      print_line(9, "MQTT IP & status");

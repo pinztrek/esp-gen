@@ -81,7 +81,7 @@ sensor:
   - platform: adc
     pin: GPIO28 # Pin 34 (ADC2) - Armed Status
     name: "Armed"
-    id: armed_status
+    id: armed # ID CLEANED
     update_interval: 5s
     # unit_of_measurement: V
     # accuracy_decimals: 2
@@ -105,8 +105,8 @@ binary_sensor:
       number: GPIO18
       mode: INPUT_PULLUP
       inverted: true # Active Low
-    name: "Mains"
-    id: mains_contact
+    name: "Mains" # <-- Name without "Contact"
+    id: mains # ID CLEANED
 
   - platform: gpio
     pin:
@@ -147,7 +147,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true # Active Low
     name: "Starting"
-    id: starting_status
+    id: starting
 
   - platform: gpio
     pin:
