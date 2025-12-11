@@ -49,13 +49,13 @@ display:
       print_line(2, "Pico Temp: %.1f C", temp_c);
       
       // Line 3: Battery Voltage & Armed Status
-      print_line(3, "Batt: %.2fV | Armed: %s", batt_v, bool_to_str(id(armed).state)); # <-- Uses id(armed)
+      print_line(3, "Batt: %.2fV | Armed: %s", batt_v, bool_to_str(id(armed).state));
       
       // Line 4: Run Enabled & Starting 
       print_line(4, "Run: %s | Start: %s", bool_to_str(id(run_enabled).state), bool_to_str(id(starting).state));
       
       // Line 5: Mains Status & Alarm 
-      print_line(5, "Mains: %s | Alarm: %s", bool_to_str(id(mains).state), bool_to_str(id(alarm).state)); # <-- Uses id(mains)
+      print_line(5, "Mains: %s | Alarm: %s", bool_to_str(id(mains).state), bool_to_str(id(alarm).state));
       
       // Line 6: Low Oil / Overtemp 
       print_line(6, "LoOil: %s | OverT: %s", bool_to_str(id(low_oil).state), bool_to_str(id(over_temp).state));
@@ -66,5 +66,9 @@ display:
       // Line 8: Generator Phase Status
       print_line(8, "P1: %s | P2: %s", bool_to_str(id(gen_phase_1).state), bool_to_str(id(gen_phase_2).state));
 
-      // Line 9: MQTT IP & Status Placeholder
-      print_line(9, "MQTT IP & status");
+      // Line 9: MQTT Connection Status (Updated)
+      if (id(mqtt).is_connected()) {
+        print_line(9, "MQTT: 192.168.1.5");
+      } else {
+        print_line(9, "MQTT Disconnected");
+      }

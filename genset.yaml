@@ -55,6 +55,25 @@ light:
     name: "Pico Built-in LED"
 
 #------------------------------------------------------
+# MQTT Integration
+mqtt:
+  broker: 192.168.1.5 # <-- REPLACE with your MQTT Broker IP Address
+  port: 1883
+  username: esphome
+  password: !secret mqtt_password
+  
+  # Publish a heartbeat to the homeassistant status topic every 60 seconds
+  # The status topic name will be 'homeassistant/status' by default.
+  status_topic: homeassistant/status
+  
+  # Enable text sensor to monitor MQTT connection status for the display
+  on_status_change:
+    - then:
+        - text_sensor.template.publish:
+            id: mqtt_status_sensor
+            state: ${is_connected} ? "Connected" : "Disconnected"
+
+#------------------------------------------------------
 # ADC Input Setup 
 adc:
   # This section enables the ADC component
@@ -81,7 +100,7 @@ sensor:
   - platform: adc
     pin: GPIO28 # Pin 34 (ADC2) - Armed Status
     name: "Armed"
-    id: armed # ID CLEANED
+    id: armed 
     update_interval: 5s
     # unit_of_measurement: V
     # accuracy_decimals: 2
@@ -93,11 +112,18 @@ text_sensor:
       name: "Current IP Address"
       id: ip_address_sensor
       update_interval: 10s
+      
+  # Text sensor to show MQTT status (Updated by 'on_status_change' above)
+  - platform: template
+    name: "MQTT Status"
+    id: mqtt_status_sensor
+    # This sensor will be populated via the lambda in the MQTT section
 
 #-------------------------------------------------------
 # --- BINARY SENSORS ---
-
+# (Binary sensors remain unchanged)
 binary_sensor:
+# ... (omitted for brevity, content is unchanged) ...
 
   # 1. Mains/Generator Status Sensors (GPIO 18-21)
   - platform: gpio
@@ -105,8 +131,8 @@ binary_sensor:
       number: GPIO18
       mode: INPUT_PULLUP
       inverted: true # Active Low
-    name: "Mains" # <-- Name without "Contact"
-    id: mains # ID CLEANED
+    name: "Mains"
+    id: mains
 
   - platform: gpio
     pin:
