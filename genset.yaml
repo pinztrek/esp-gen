@@ -1,10 +1,10 @@
+#genset.yaml
 esphome:
   name: genset
-  #friendly_name: blink
+  #friendly_name: genmon2
 
 rp2040:
   board: rpipicow
-
 
 # Enable logging
 logger:
@@ -12,8 +12,6 @@ logger:
 # Enable Home Assistant API
 api:
   encryption:
-    #key: "8F/nWL+L9T5LSBaBhGkX8xO3T1t9OoZm/Fc/A+4VFs0="
-    #key: "C11/kI/6x+g2s0W04604S7N51/Q0rWj7YjYw3Mv52/U="
     key: !secret api_encryption_key
 
 ota:
@@ -29,172 +27,78 @@ wifi:
     ssid: "Blink Fallback Hotspot"
     password: "esphomepw"
 
+  # --- RESTORED: On Connect Action for Internal LED ---
   on_connect:
     then:
       - light.turn_on:
-          id: rgb_led_display
-          brightness: 50%
-          red: 0%
-          green: 100%
-          blue: 0%
+          id: onboard_led_light
+          # Using a standard 100% brightness for the simple binary LED
+          brightness: 100% 
 
 #-------------------------------------------------------
 # Homeassistant I/O code
 output: 
   
-  # 1. Built-in LED (GPIO 25)
-  #- platform: rp2040_pwm # <--- Use PWM output to make 'light: binary' happy
-  #  pin: 25
-    #id: onboard_led_output
-    #frequency: 1000Hz # Required for PWM outputs
-  
-  # Pi Moroni LED Red (GPIO 6) - MUST BE rp2040_pwm for dimming
-  - platform: rp2040_pwm
-    pin: GPIO6
-    id: led_r
-    # Frequency setting is optional, but 1kHz is a good default
-    frequency: 1000Hz 
-    inverted: true
-  
-  # Pi Moroni LED Green (GPIO 7) - MUST BE rp2040_pwm
-  - platform: rp2040_pwm
-    pin: GPIO7
-    id: led_g
-    frequency: 1000Hz 
-    inverted: true
-  
-  # Pi Moroni LED Blue (GPIO 8) - MUST BE rp2040_pwm
-  - platform: rp2040_pwm
-    pin: GPIO8
-    id: led_b
-    frequency: 1000Hz
-    inverted: true
-
+  # --- ADDED: Output for Built-in LED (GPIO 25) ---
+  - platform: gpio
+    pin: GPIO25
+    id: onboard_led_output
+    # The Pico W LED requires a simple HIGH/LOW signal (not PWM)
+    
 #-------------------------------------------------------
 
 # --- LIGHT COMPONENTS (START OF SINGLE LIGHT BLOCK) ---
 light: # <--- ONLY ONE 'light:' KEY ALLOWED
   
-  # 1. Built-in LED Light
-  #- platform: binary 
-    #output: onboard_led_output
-    #name: "Pico Built-in LED"
-
-  # 3. Pi Moroni Display RGB LED 
-  - platform: rgb
-    name: "Pico Display RGB LED"
-    id: rgb_led_display
-    red: led_r
-    green: led_g
-    blue: led_b
+  # --- ADDED: Built-in LED Light component ---
+  - platform: binary
+    output: onboard_led_output
+    id: onboard_led_light
+    name: "Pico Built-in LED"
 
 
-#-------------------------------------------------------
-
-binary_sensor:
-
-#---------- Pi Moroni buttons ----------------------------------------
-
-  # 2. Display Button A (GPIO 12) - Toggle
-  - platform: gpio
-    pin:
-      number: GPIO12
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button A"
-    on_press:
-      then:
-        - light.toggle:
-            id: rgb_led_display
-
-  # 3. Display Button B (GPIO 13) - Red
-  - platform: gpio
-    pin:
-      number: GPIO13
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button B"
-    on_press:
-      then:
-        - light.turn_on:
-            id: rgb_led_display
-            brightness: 75%
-            red: 100%
-            green: 0
-            blue: 0
-
-  # 4. Display Button X (GPIO 14) - Green
-  - platform: gpio
-    pin:
-      number: GPIO14
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button X"
-    on_press:
-      then:
-        - light.turn_on:
-            id: rgb_led_display
-            brightness: 75%
-            red: 0%
-            green: 100%
-            blue: 0
-
-  # 5. Display Button Y (GPIO 15) - Blue
-  - platform: gpio
-    pin:
-      number: GPIO15
-      mode: INPUT_PULLUP
-      inverted: true
-    name: "Display Button Y"
-    on_press:
-      then:
-        - light.turn_on:
-            id: rgb_led_display
-            brightness: 75%
-            red: 0%
-            green: 0%
-            blue: 100%
+# --- binary_sensor section remains empty ---
 
 #------------------------------------------------------
-# Display st7789
+# Display ssd1306
 
-# --- 1. SPI Bus Configuration ---
-spi:
-  id: spi_bus_display
-  clk_pin: GPIO18 # SCLK
-  mosi_pin: GPIO19 # MOSI
+# --- 1. I2C Bus Configuration for SSD1306 ---
+i2c:
+  id: i2c_bus_display
+  sda: GPIO4 
+  scl: GPIO5
+  scan: true
 
-# --- 2. Font Definition ---
+# --- 2. Internal Font Definition ---
 font:
-  - file: "gfonts://Roboto Mono"
-    size: 16
+  - platform: arial
     id: display_font
+    # The 'arial' font, like 'tiny', is a dedicated platform and requires no size or glyphs.
 
-# --- 3. ST7789 Display Component  ---
+# --- 3. SSD1306 Display Component ---
 display:
-  - platform: st7789v
+  - platform: ssd1306_i2c
     id: pico_display
     
-    # Using the correct model for proper initialization (240x135 screen)
-    model: TTGO TDisplay 135x240 
+    model: "SSD1306 128x64"
     
-    spi_id: spi_bus_display
-    cs_pin: GPIO17
-    dc_pin: GPIO16
-    backlight_pin: GPIO20
-    rotation: 270 
+    i2c_id: i2c_bus_display
+    address: 0x3C
     
     lambda: |-
       float temp_c = id(pico_chip_temperature).state;
-      float temp_f = (temp_c * 9.0 / 5.0) + 32.0; // Perform C to F conversion <--- FIX IS HERE
+      float temp_f = (temp_c * 9.0 / 5.0) + 32.0;
       
-      it.print(0, 0, id(display_font), "Pico Display Pack");
+      // The arial font is approx. 8 pixels high (similar to internal size 6).
+      // Keeping the spacing at 10 pixels is appropriate for readability.
+      
+      it.print(0, 0, id(display_font), "Chip Temperature:");
       
       // Display Celsius value
-      it.printf(0, 20, id(display_font), "C: %.1f C", temp_c);
+      it.printf(0, 10, id(display_font), "C: %.1f C", temp_c);
       
       // Display Fahrenheit value
-      it.printf(0, 40, id(display_font), "F: %.1f F", temp_f);
+      it.printf(0, 20, id(display_font), "F: %.1f F", temp_f);
 
 #-------------------------------------------------------
 sensor:
@@ -203,4 +107,3 @@ sensor:
     name: "Pico Chip Temperature"
     update_interval: 60s
     accuracy_decimals: 1
-
