@@ -1,19 +1,18 @@
 # functions.yaml
 
-# --- 1. I2C Bus Configuration for SSD1306 ---
-# Keeping this here as it's directly related to the display setup
+# --- I2C Bus Configuration for SSD1306 ---
 i2c:
   id: i2c_bus_display
   sda: GPIO4 
   scl: GPIO5
   scan: true
 
-# --- 2. Internal Font Definition ---
+# --- Internal Font Definition ---
 font:
   - platform: arial
     id: display_font
 
-# --- 3. SSD1306 Display Component ---
+# --- SSD1306 Display Component ---
 display:
   - platform: ssd1306_i2c
     id: pico_display
@@ -25,29 +24,47 @@ display:
     
     # Define Constants/Macros for Abstraction
     lambda: |-
-      #define LINE_HEIGHT_PIXELS 10
+      #define LINE_HEIGHT_PIXELS 7 // Adjusted for tighter fit on 64px display
       
       // Macro that prints text starting at Y = (line_num - 1) * LINE_HEIGHT_PIXELS
       #define print_line(line_num, format, ...) \
         it.printf(0, (line_num - 1) * LINE_HEIGHT_PIXELS, id(display_font), format, ##__VA_ARGS__)
+        
+      // --- Helper Functions ---
+      // Function to return ON/OFF string for display
+      const char* bool_to_str(bool state) {
+        return state ? "ON" : "OFF";
+      }
 
       // --- Calculations ---
       float temp_c = id(pico_chip_temperature).state;
-      float temp_f = (temp_c * 9.0 / 5.0) + 32.0;
-
-      // --- Display Calls using the Macro ---
+      float batt_v = id(battery_voltage).state;
+      
+      // --- Display Calls using the Macro (Max 9 lines fit cleanly with 7px spacing) ---
       
       // Line 1: IP Address
-      print_line(1, id(ip_address_sensor).state.c_str());
+      print_line(1, "IP: %s", id(ip_address_sensor).state.c_str());
       
-      // Line 2: Temperature (Using the format string capability of the macro)
-      print_line(2, "Chip C/F: %.1fC / %.1fF", temp_c, temp_f);
+      // Line 2: Temperature
+      print_line(2, "Pico Temp: %.1f C", temp_c);
       
-      // Line 3: Placeholder 
-      print_line(3, "L3: Start/Stop");
+      // Line 3: Battery Voltage & Armed Status
+      print_line(3, "Batt: %.2fV | Armed: %s", batt_v, bool_to_str(id(armed_status).state));
       
-      // Line 4: Placeholder
-      print_line(4, "L4: Runtime");
+      // Line 4: Run Enabled & Starting 
+      print_line(4, "Run: %s | Start: %s", bool_to_str(id(run_enabled).state), bool_to_str(id(starting_status).state));
       
-      // Line 5: Placeholder
-      print_line(5, "L5: Oil Pressure");
+      // Line 5: Mains Status & Alarm 
+      print_line(5, "Mains: %s | Alarm: %s", bool_to_str(id(mains_contact).state), bool_to_str(id(alarm).state));
+      
+      // Line 6: Low Oil / Overtemp 
+      print_line(6, "LoOil: %s | OverT: %s", bool_to_str(id(low_oil).state), bool_to_str(id(over_temp).state));
+      
+      // Line 7: Overcrank / Overspeed 
+      print_line(7, "OvrCrank: %s | OvrSpd: %s", bool_to_str(id(over_crank).state), bool_to_str(id(over_speed).state));
+      
+      // Line 8: Transfer Switch & Spare 1
+      print_line(8, "Xfer Sw: %s | Spare 1: %s", bool_to_str(id(xfer_sw).state), bool_to_str(id(spare_1).state));
+      
+      // Line 9: Generator Phase Status
+      print_line(9, "P1: %s | P2: %s", bool_to_str(id(gen_phase_1).state), bool_to_str(id(gen_phase_2).state));

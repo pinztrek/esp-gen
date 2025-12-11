@@ -54,8 +54,10 @@ light:
     id: onboard_led_light
     name: "Pico Built-in LED"
 
-
-# --- binary_sensor section remains empty ---
+#------------------------------------------------------
+# ADC Input Setup 
+adc:
+  # This section enables the ADC component
 
 #------------------------------------------------------
 # Sensors & Text Sensors
@@ -66,12 +68,136 @@ sensor:
     update_interval: 60s
     accuracy_decimals: 1
 
+  # --- ADC INPUTS: ADC1 (GPIO27) and ADC2 (GPIO28) adjacent to AGND ---
+  - platform: adc
+    pin: GPIO27 # Pin 32 (ADC1) - Battery Voltage
+    name: "Battery Voltage"
+    id: battery_voltage
+    update_interval: 5s
+    # unit_of_measurement: V
+    # accuracy_decimals: 2
+    # lambda: return x * 5.0 / 4095.0 * 10.0; # Example scaling
+
+  - platform: adc
+    pin: GPIO28 # Pin 34 (ADC2) - Armed Status
+    name: "Armed"
+    id: armed_status
+    update_interval: 5s
+    # unit_of_measurement: V
+    # accuracy_decimals: 2
+
+# --- Text Sensor to capture IP Address ---
 text_sensor:
   - platform: wifi_info
     ip_address:
       name: "Current IP Address"
       id: ip_address_sensor
       update_interval: 10s
+
+#-------------------------------------------------------
+# --- BINARY SENSORS ---
+
+binary_sensor:
+
+  # 1. Mains/Generator Status Sensors (GPIO 18-21)
+  - platform: gpio
+    pin:
+      number: GPIO18
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Mains"
+    id: mains_contact
+
+  - platform: gpio
+    pin:
+      number: GPIO19
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Gen Phase 1"
+    id: gen_phase_1
+
+  - platform: gpio
+    pin:
+      number: GPIO20
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Gen Phase 2"
+    id: gen_phase_2
+
+  - platform: gpio
+    pin:
+      number: GPIO21
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Alarm"
+    id: alarm
+
+  # 2. Control Logic Inputs (GPIO 10-13)
+  - platform: gpio
+    pin:
+      number: GPIO10
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Transfer Switch"
+    id: xfer_sw
+
+  - platform: gpio
+    pin:
+      number: GPIO11
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Starting"
+    id: starting_status
+
+  - platform: gpio
+    pin:
+      number: GPIO12
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Run Enabled"
+    id: run_enabled
+
+  - platform: gpio
+    pin:
+      number: GPIO13
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Spare 1"
+    id: spare_1
+
+  # 3. Engine Status/Alarm LEDs (GPIO 6-9)
+  - platform: gpio
+    pin:
+      number: GPIO6
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Low Oil"
+    id: low_oil
+
+  - platform: gpio
+    pin:
+      number: GPIO7
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Over Temp"
+    id: over_temp
+
+  - platform: gpio
+    pin:
+      number: GPIO8
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Over Crank"
+    id: over_crank
+
+  - platform: gpio
+    pin:
+      number: GPIO9
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Over Speed"
+    id: over_speed
+
 
 #------------------------------------------------------
 # Display Configuration: Pulled in from external file
