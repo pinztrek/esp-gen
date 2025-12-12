@@ -3,14 +3,21 @@
 # --- I2C Bus Configuration for SSD1306 ---
 i2c:
   id: i2c_bus_display
-  sda: GPIO4 
+  sda: GPIO4
   scl: GPIO5
   scan: true
 
-# --- Internal Font Definition ---
+# --- Font Definition (Uses Google Fonts for minimal dependency) ---
 font:
-  - platform: arial
+  - file: "gfonts://Roboto" # ESPHome downloads this at compile time
     id: display_font
+    size: 7 # Small size to approximate a 5x7 or 4x6 display font
+    glyphs:
+      # Consolidated glyph list (no duplicates)
+      - '0123456789.,°'
+      - 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      - 'abcdefghijklmnopqrstuvwxyz'
+      - ' /()|-:'
 
 # --- SSD1306 Display Component ---
 display:
@@ -22,20 +29,15 @@ display:
     i2c_id: i2c_bus_display
     address: 0x3C
     
-    # Define Constants/Macros for Abstraction
+    # Define Constants, Macros, and the Display Logic
     lambda: |-
+      // --- MACRO DEFINITIONS ---
       #define LINE_HEIGHT_PIXELS 7 // Adjusted for tighter fit on 64px display
       
       // Macro that prints text starting at Y = (line_num - 1) * LINE_HEIGHT_PIXELS
       #define print_line(line_num, format, ...) \
         it.printf(0, (line_num - 1) * LINE_HEIGHT_PIXELS, id(display_font), format, ##__VA_ARGS__)
         
-      // --- Helper Functions ---
-      // Function to return ON/OFF string for display
-      const char* bool_to_str(bool state) {
-        return state ? "ON" : "OFF";
-      }
-
       // --- Calculations ---
       float temp_c = id(pico_chip_temperature).state;
       float batt_v = id(battery_voltage).state;
@@ -49,26 +51,41 @@ display:
       print_line(2, "Pico Temp: %.1f C", temp_c);
       
       // Line 3: Battery Voltage & Armed Status
-      print_line(3, "Batt: %.2fV | Armed: %s", batt_v, bool_to_str(id(armed).state));
+      // Uses the C++ ternary operator for ON/OFF status
+      print_line(3, "Batt: %.2fV | Armed: %s", 
+        batt_v, 
+        id(armed).state ? "ON" : "OFF"
+      );
       
-      // Line 4: Run Enabled & Starting 
-      print_line(4, "Run: %s | Start: %s", bool_to_str(id(run_enabled).state), bool_to_str(id(starting).state));
+      // Line 4: Run Enabled & Starting
+      print_line(4, "Run: %s | Start: %s", 
+        id(run_enabled).state ? "ON" : "OFF",
+        id(starting).state ? "ON" : "OFF"
+      );
       
-      // Line 5: Mains Status & Alarm 
-      print_line(5, "Mains: %s | Alarm: %s", bool_to_str(id(mains).state), bool_to_str(id(alarm).state));
+      // Line 5: Mains Status & Alarm
+      print_line(5, "Mains: %s | Alarm: %s", 
+        id(mains).state ? "ON" : "OFF",
+        id(alarm_status).state ? "ON" : "OFF"
+      );
       
-      // Line 6: Low Oil / Overtemp 
-      print_line(6, "LoOil: %s | OverT: %s", bool_to_str(id(low_oil).state), bool_to_str(id(over_temp).state));
+      // Line 6: Low Oil / Overtemp
+      print_line(6, "LoOil: %s | OverT: %s", 
+        id(low_oil).state ? "ON" : "OFF",
+        id(over_temp).state ? "ON" : "OFF"
+      );
       
-      // Line 7: Overcrank / Overspeed 
-      print_line(7, "OvrCrank: %s | OvrSpd: %s", bool_to_str(id(over_crank).state), bool_to_str(id(over_speed).state));
+      // Line 7: Overcrank / Overspeed
+      print_line(7, "OvrCrank: %s | OvrSpd: %s", 
+        id(over_crank).state ? "ON" : "OFF",
+        id(over_speed).state ? "ON" : "OFF"
+      );
       
       // Line 8: Generator Phase Status
-      print_line(8, "P1: %s | P2: %s", bool_to_str(id(gen_phase_1).state), bool_to_str(id(gen_phase_2).state));
+      print_line(8, "P1: %s | P2: %s", 
+        id(gen_phase_1).state ? "ON" : "OFF",
+        id(gen_phase_2).state ? "ON" : "OFF"
+      );
 
-      // Line 9: MQTT Connection Status (Updated)
-      if (id(mqtt).is_connected()) {
-        print_line(9, "MQTT: 192.168.1.5");
-      } else {
-        print_line(9, "MQTT Disconnected");
-      }
+      // Line 9: MQTT Status Placeholder
+      print_line(9, "MQTT: Disabled");

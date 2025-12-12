@@ -57,7 +57,7 @@ light:
 #------------------------------------------------------
 # MQTT Integration
 mqtt:
-  broker: 192.168.1.5 # <-- REPLACE with your MQTT Broker IP Address
+  broker: 172.16.30.41 # MING mqtt
   port: 1883
   username: esphome
   password: !secret mqtt_password
@@ -72,11 +72,6 @@ mqtt:
         - text_sensor.template.publish:
             id: mqtt_status_sensor
             state: ${is_connected} ? "Connected" : "Disconnected"
-
-#------------------------------------------------------
-# ADC Input Setup 
-adc:
-  # This section enables the ADC component
 
 #------------------------------------------------------
 # Sensors & Text Sensors
@@ -156,7 +151,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true # Active Low
     name: "Alarm"
-    id: alarm
+    id: alarm_status
 
   # 2. Control Logic Inputs (GPIO 10-13)
   - platform: gpio
