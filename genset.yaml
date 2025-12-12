@@ -100,17 +100,17 @@ sensor:
     name: "Battery Voltage"
     id: battery_voltage
     update_interval: 5s
-    # unit_of_measurement: V
-    # accuracy_decimals: 2
+    unit_of_measurement: V
+    accuracy_decimals: 1
     # lambda: return x * 5.0 / 4095.0 * 10.0; # Example scaling
 
   - platform: adc
     pin: GPIO28 # Pin 34 (ADC2) - Armed Status
-    name: "Armed"
-    id: armed 
+    name: "Armed ADC"
+    id: armed_adc 
     update_interval: 5s
-    # unit_of_measurement: V
-    # accuracy_decimals: 2
+    unit_of_measurement: V
+    accuracy_decimals: 1
 
 # --- Text Sensor to capture IP Address ---
 text_sensor:
@@ -236,6 +236,14 @@ binary_sensor:
     name: "Over Speed"
     id: over_speed
 
+  # New Binary Sensor: ON when voltage is high (Armed)
+  - platform: template
+    name: "Armed"
+    id: armed 
+    # Use the new armed_adc ID
+    # assumes cathode of led pulled to ground to illuminate
+    lambda: return id(armed_adc).state < 1.0; 
+    device_class: safety
 
 #------------------------------------------------------
 # Display Configuration: Pulled in from external file
