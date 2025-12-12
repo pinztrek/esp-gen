@@ -57,16 +57,33 @@ light:
 #------------------------------------------------------
 # MQTT Integration
 #mqtt:
+  #id: mqtt_client
   #broker: 172.16.30.41
   #port: 1883
   #username: esphome
   #password: !secret mqtt_password
-  #status_topic: homeassistant/status
-  #on_status_change:
-    #- then:
-        #- text_sensor.template.publish:
-            #id: mqtt_status_sensor
-            #state: '${is_connected} ? "Connected" : "Disconnected"'
+
+  # additional params
+  #topic_prefix: esphome
+
+# Status configuration (using the documented structure)
+  #status:
+    #topic: homeassistant/status
+    #update_interval: 60s # Publish status every 60 seconds (optional, but good practice)
+
+# Birth message (Sends "online" when connected)
+  #birth_message:
+    #topic: homeassistant/genset/status
+    #payload: "online"
+    #qos: 1
+    #retain: true
+    
+  # Will message (Broker sends "offline" if connection is lost)
+  #will_message:
+    #topic: homeassistant/genset/status
+    #payload: "offline"
+    #qos: 1
+    #retain: true
 
 #------------------------------------------------------
 # Sensors & Text Sensors
@@ -103,11 +120,18 @@ text_sensor:
       id: ip_address_sensor
       update_interval: 10s
       
-  # Text sensor to show MQTT status (Updated by 'on_status_change' above)
-  - platform: template
-    name: "MQTT Status"
-    id: mqtt_status_sensor
-    # This sensor will be populated via the lambda in the MQTT section
+# Text sensor to show MQTT status
+  #- platform: template
+    #name: "MQTT Status"
+    #id: mqtt_status_sensor
+    # Using the YAML Flow Block Scalar (|-): This guarantees the C++ is treated as raw text.
+    #lambda: |- 
+      #if (id(mqtt_client).connected) {
+        #return "Connected";
+      #} else {
+        #return "Disconnected";
+      #}
+    #update_interval: 15s
 
 #-------------------------------------------------------
 # --- BINARY SENSORS ---
