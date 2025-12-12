@@ -11,7 +11,7 @@ i2c:
 font:
   - file: "gfonts://Roboto" # ESPHome downloads this at compile time
     id: display_font
-    size: 8 # <--- FONT SIZE SET TO 8
+    size: 8
     glyphs:
       # Consolidated glyph list (no duplicates)
       - '0123456789.,°'
@@ -32,11 +32,20 @@ display:
     # Define Constants, Macros, and the Display Logic
     lambda: |-
       // --- MACRO DEFINITIONS ---
-      #define LINE_HEIGHT_PIXELS 9 // <--- LINE HEIGHT SET TO 9
+      #define LINE_HEIGHT_PIXELS 9 
       
-      // Macro that prints text starting at Y = (line_num - 1) * LINE_HEIGHT_PIXELS
-      #define print_line(line_num, format, ...) \
-        it.printf(0, (line_num - 1) * LINE_HEIGHT_PIXELS, id(display_font), format, ##__VA_ARGS__)
+      // Macro 1: NORMAL (White Text on Black Background)
+      #define print_line_normal(line_num, format, ...) \
+        it.printf(0, (line_num - 1) * LINE_HEIGHT_PIXELS, id(display_font), COLOR_ON, format, ##__VA_ARGS__)
+        
+      // Macro 2: INVERTED (Black Text on White Background)
+      // This macro handles drawing the white rectangle background first.
+      #define print_line_inverse(line_num, format, ...) \
+        do { \
+          uint8_t y_pos = (line_num - 1) * LINE_HEIGHT_PIXELS; \
+          it.filled_rectangle(0, y_pos, 128, LINE_HEIGHT_PIXELS, COLOR_ON); \
+          it.printf(0, y_pos, id(display_font), COLOR_OFF, format, ##__VA_ARGS__); \
+        } while(0)
         
       // --- Calculations ---
       float temp_c = id(pico_chip_temperature).state;
@@ -44,41 +53,41 @@ display:
       
       // --- Display Calls (Max 7 lines fit with 9px spacing) ---
       
-      // Line 1: IP Address & Pico Temperature (xx.x °C)
-      print_line(1, "IP: %s | %.1f °C", id(ip_address_sensor).state.c_str(), temp_c);
+      // Line 1: IP Address & Pico Temperature (INVERSE)
+      print_line_inverse(1, "IP: %s | %.1f °C", id(ip_address_sensor).state.c_str(), temp_c);
       
-      // Line 2: Battery Voltage & Armed Status
-      print_line(2, "Batt: %.2fV | Armed: %s", 
+      // Line 2: Battery Voltage & Armed Status (NORMAL)
+      print_line_normal(2, "Batt: %.2fV | Armed: %s", 
         batt_v, 
         id(armed).state ? "ON" : "OFF"
       );
       
-      // Line 3: Mains & Generator Phase Status
-      print_line(3, "Mains: %s | P1: %s P2: %s", 
+      // Line 3: Mains & Generator Phase Status (NORMAL)
+      print_line_normal(3, "Mains: %s | P1: %s P2: %s", 
         id(mains).state ? "ON" : "OFF",
         id(gen_phase_1).state ? "ON" : "OFF",
         id(gen_phase_2).state ? "ON" : "OFF"
       );
       
-      // Line 4: Control Status (Run Enabled & Starting)
-      print_line(4, "Run: %s | Start: %s", 
+      // Line 4: Control Status (Run Enabled & Starting) (NORMAL)
+      print_line_normal(4, "Run: %s | Start: %s", 
         id(run_enabled).state ? "ON" : "OFF",
         id(starting).state ? "ON" : "OFF"
       );
 
-      // Line 5: Low Oil / Overtemp
-      print_line(5, "LoOil: %s | OverT: %s", 
+      // Line 5: Low Oil / Overtemp (NORMAL)
+      print_line_normal(5, "LoOil: %s | OverT: %s", 
         id(low_oil).state ? "ON" : "OFF",
         id(over_temp).state ? "ON" : "OFF"
       );
       
-      // Line 6: Overcrank / Overspeed
-      print_line(6, "OvrCrank: %s | OvrSpd: %s", 
+      // Line 6: Overcrank / Overspeed (NORMAL)
+      print_line_normal(6, "OvrCrank: %s | OvrSpd: %s", 
         id(over_crank).state ? "ON" : "OFF",
         id(over_speed).state ? "ON" : "OFF"
       );
       
-      // Line 7: Alarm Status & MQTT Status Placeholder
-      print_line(7, "Alarm: %s | MQTT: Disabled", 
+      // Line 7: Alarm Status & MQTT Status Placeholder (INVERSE)
+      print_line_inverse(7, "Alarm: %s | MQTT: Disabled", 
         id(alarm_status).state ? "ON" : "OFF"
       );
