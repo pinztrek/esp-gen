@@ -3,8 +3,8 @@
 # --- I2C Bus Configuration for SSD1306 ---
 i2c:
   id: i2c_bus_display
-  sda: GPIO4
-  scl: GPIO5
+  sda: GPIO16  # <--- WAS GPIO4
+  scl: GPIO17  # <--- WAS GPIO5
   scan: true
 
 # --- Font Definition (Uses Google Fonts for minimal dependency) ---

@@ -56,22 +56,17 @@ light:
 
 #------------------------------------------------------
 # MQTT Integration
-mqtt:
-  broker: 172.16.30.41 # MING mqtt
-  port: 1883
-  username: esphome
-  password: !secret mqtt_password
-  
-  # Publish a heartbeat to the homeassistant status topic every 60 seconds
-  # The status topic name will be 'homeassistant/status' by default.
-  status_topic: homeassistant/status
-  
-  # Enable text sensor to monitor MQTT connection status for the display
-  on_status_change:
-    - then:
-        - text_sensor.template.publish:
-            id: mqtt_status_sensor
-            state: ${is_connected} ? "Connected" : "Disconnected"
+#mqtt:
+  #broker: 172.16.30.41
+  #port: 1883
+  #username: esphome
+  #password: !secret mqtt_password
+  #status_topic: homeassistant/status
+  #on_status_change:
+    #- then:
+        #- text_sensor.template.publish:
+            #id: mqtt_status_sensor
+            #state: '${is_connected} ? "Connected" : "Disconnected"'
 
 #------------------------------------------------------
 # Sensors & Text Sensors
@@ -116,9 +111,7 @@ text_sensor:
 
 #-------------------------------------------------------
 # --- BINARY SENSORS ---
-# (Binary sensors remain unchanged)
 binary_sensor:
-# ... (omitted for brevity, content is unchanged) ...
 
   # 1. Mains/Generator Status Sensors (GPIO 18-21)
   - platform: gpio
