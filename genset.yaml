@@ -34,25 +34,25 @@ wifi:
           id: onboard_led_light
           brightness: 100% 
 
+# Does not work on pi pico yet
+#captive_portal:
+
 #-------------------------------------------------------
 # Homeassistant I/O code
-output: 
+#output: 
   
-  # Output for Built-in LED (GPIO 25)
-  - platform: gpio
-    pin: GPIO25
-    id: onboard_led_output
-    
 #-------------------------------------------------------
 
 # --- LIGHT COMPONENTS ---
 light: 
-  
-  # Built-in LED Light component
-  - platform: binary
-    output: onboard_led_output
+  # LIGHT component for Pico W Status LED
+  - platform: status_led
+    # The Pico W LED is controlled by the CYW43439 Wi-Fi chip.
+    # Pin 32 or Pin LED control it
+    #pin: GPIO32 
+    pin: LED 
+    name: "Pico Status LED"
     id: onboard_led_light
-    name: "Pico Built-in LED"
 
 #------------------------------------------------------
 # MQTT Integration
@@ -136,6 +136,16 @@ text_sensor:
 # --- PERIODIC REFRESH INTERVAL workaround for binary sensors ---
 
 interval:
+
+  # --- LED BLINKING LOGIC ---
+  # This interval handles the regular 1-second blinking.
+  #- interval: 1s 
+    #then:
+      # Use the light.toggle action to switch the state every second.
+      #- light.toggle:
+          #id: onboard_led_light
+
+
   - interval: 30s #refresh interval period
     then:
       
