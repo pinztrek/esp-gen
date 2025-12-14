@@ -28,12 +28,13 @@ wifi:
     password: "esphomepw"
 
   # --- On Connect Action for Internal LED ---
-  on_connect:
-    then:
-      - light.turn_on:
-          id: onboard_led_light
-          brightness: 100% 
-
+  # Turn it on upon connect, but it will be overridden by status_led
+  #on_connect:
+    #then:
+      #- light.turn_on:
+          #id: onboard_led_light
+          #brightness: 100% 
+#
 # Does not work on pi pico yet
 #captive_portal:
 
@@ -43,16 +44,23 @@ wifi:
   
 #-------------------------------------------------------
 
+status_led:
+  #pin: LED
+  pin:
+    number: LED
+    inverted: true
+  
+
 # --- LIGHT COMPONENTS ---
-light: 
+#light: 
   # LIGHT component for Pico W Status LED
-  - platform: status_led
+  #- platform: status_led
     # The Pico W LED is controlled by the CYW43439 Wi-Fi chip.
     # Pin 32 or Pin LED control it
     #pin: GPIO32 
-    pin: LED 
-    name: "Pico Status LED"
-    id: onboard_led_light
+    #pin: LED 
+    #name: "Pico Status LED"
+    #id: onboard_led_light
 
 #------------------------------------------------------
 # MQTT Integration
@@ -99,7 +107,7 @@ sensor:
     pin: GPIO27 # Pin 32 (ADC1) - Battery Voltage
     name: "Battery Voltage"
     id: battery_voltage
-    update_interval: 5s
+    update_interval: 60s
     unit_of_measurement: V
     accuracy_decimals: 1
     # lambda: return x * 5.0 / 4095.0 * 10.0; # Example scaling
@@ -108,7 +116,7 @@ sensor:
     pin: GPIO28 # Pin 34 (ADC2) - Armed Status
     name: "Armed ADC"
     id: armed_adc 
-    update_interval: 5s
+    update_interval: 20s
     unit_of_measurement: V
     accuracy_decimals: 1
 
