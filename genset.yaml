@@ -141,37 +141,71 @@ text_sensor:
       #}
     #update_interval: 15s
 
+# --- LOGIC-BASED GENERATOR STATUS ---
+  - platform: template
+    name: "Generator Status"
+    id: generator_status
+    icon: "mdi:engine"
+    update_interval: 1s
+    lambda: |-
+      // 1. Check for Critical Alarms (Highest Priority)
+      if (id(low_oil).state || id(over_temp).state || id(over_crank).state || id(over_speed).state || id(alarm_status).state) {
+        return {"Alarm/Fault"};
+      }
+
+      // 2. Check for Active Power Generation
+      if (id(gen_phase_1).state && id(gen_phase_2).state) {
+        if (id(xfer_sw).state) {
+          return {"Generating"};
+        }
+        return {"Running"};
+      }
+
+      // 3. Check for Starting Sequence
+      if (id(starting).state) {
+        return {"Starting"};
+      }
+
+      // 4. Check for Readiness (Auto Enabled and mains live)
+      if (id(auto_enabled).state && id(mains).state) {
+        return {"Standby"};
+      }
+
+      // 4. Check for Readiness (Auto Enabled and mains live)
+      if (id(auto_enabled).state && ! id(mains).state) {
+        return {"Standby Outage"};
+      }
+
+      // 5. Check if Utility/Mains power is present while stopped
+      if (id(mains).state) {
+        return {"Mains Active"};
+      }
+
+      return {"Off/Manual"};
+
 # --- PERIODIC REFRESH INTERVAL workaround for binary sensors ---
 
 interval:
 
-  # --- LED BLINKING LOGIC ---
-  # This interval handles the regular 1-second blinking.
-  #- interval: 1s 
-    #then:
-      # Use the light.toggle action to switch the state every second.
-      #- light.toggle:
-          #id: onboard_led_light
-
-
-  - interval: 30s #refresh interval period
+  # publish state every 30 sec as a backup, it is also published 
+  # if the sensor changes
+  - interval: 30s # Refresh interval period
     then:
-      
-      # 1. Mains/Generator Status (GPIO 18-21)
+      # 1. Mains/Generator Status (Updated GPIO 18-21 Mappings)
       - binary_sensor.template.publish:
-          id: mains
-          state: !lambda 'return id(mains).state;'
-      - binary_sensor.template.publish:
-          id: gen_phase_1
-          state: !lambda 'return id(gen_phase_1).state;'
+          id: alarm_status
+          state: !lambda 'return id(alarm_status).state;'
       - binary_sensor.template.publish:
           id: gen_phase_2
           state: !lambda 'return id(gen_phase_2).state;'
       - binary_sensor.template.publish:
-          id: alarm_status
-          state: !lambda 'return id(alarm_status).state;'
+          id: gen_phase_1
+          state: !lambda 'return id(gen_phase_1).state;'
+      - binary_sensor.template.publish:
+          id: mains
+          state: !lambda 'return id(mains).state;'
 
-      # 2. Control Logic Inputs (GPIO 10-13)
+      # 2. Control Logic Inputs (Updated GPIO 10-13 Mappings)
       - binary_sensor.template.publish:
           id: xfer_sw
           state: !lambda 'return id(xfer_sw).state;'
@@ -179,14 +213,11 @@ interval:
           id: starting
           state: !lambda 'return id(starting).state;'
       - binary_sensor.template.publish:
-          id: run_enabled
-          state: !lambda 'return id(run_enabled).state;'
-      - binary_sensor.template.publish:
           id: auto_enabled
           state: !lambda 'return id(auto_enabled).state;'
-      #- binary_sensor.template.publish:
-          #id: spare_1
-          #state: !lambda 'return id(spare_1).state;'
+      - binary_sensor.template.publish:
+          id: run_enabled
+          state: !lambda 'return id(run_enabled).state;'
 
       # 3. Engine Status/Alarm LEDs (GPIO 6-9)
       - binary_sensor.template.publish:
@@ -201,7 +232,6 @@ interval:
       - binary_sensor.template.publish:
           id: over_speed
           state: !lambda 'return id(over_speed).state;'
-
 #-------------------------------------------------------
 # --- BINARY SENSORS ---
 binary_sensor:
