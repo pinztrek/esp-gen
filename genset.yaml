@@ -182,8 +182,11 @@ interval:
           id: run_enabled
           state: !lambda 'return id(run_enabled).state;'
       - binary_sensor.template.publish:
-          id: spare_1
-          state: !lambda 'return id(spare_1).state;'
+          id: auto_enabled
+          state: !lambda 'return id(auto_enabled).state;'
+      #- binary_sensor.template.publish:
+          #id: spare_1
+          #state: !lambda 'return id(spare_1).state;'
 
       # 3. Engine Status/Alarm LEDs (GPIO 6-9)
       - binary_sensor.template.publish:
@@ -209,20 +212,12 @@ binary_sensor:
       number: GPIO18
       mode: INPUT_PULLUP
       inverted: true # Active Low
-    name: "Mains"
-    id: mains
+    name: "Alarm"
+    id: alarm_status
 
   - platform: gpio
     pin:
       number: GPIO19
-      mode: INPUT_PULLUP
-      inverted: true # Active Low
-    name: "Gen Phase 1"
-    id: gen_phase_1
-
-  - platform: gpio
-    pin:
-      number: GPIO20
       mode: INPUT_PULLUP
       inverted: true # Active Low
     name: "Gen Phase 2"
@@ -230,11 +225,19 @@ binary_sensor:
 
   - platform: gpio
     pin:
+      number: GPIO20
+      mode: INPUT_PULLUP
+      inverted: true # Active Low
+    name: "Gen Phase 1"
+    id: gen_phase_1
+
+  - platform: gpio
+    pin:
       number: GPIO21
       mode: INPUT_PULLUP
       inverted: true # Active Low
-    name: "Alarm"
-    id: alarm_status
+    name: "Mains"
+    id: mains
 
   # 2. Control Logic Inputs (GPIO 10-13)
   - platform: gpio
@@ -258,16 +261,16 @@ binary_sensor:
       number: GPIO12
       mode: INPUT_PULLUP
       inverted: true # Active Low
-    name: "Run Enabled"
-    id: run_enabled
+    name: "Auto Enabled"
+    id: auto_enabled
 
   - platform: gpio
     pin:
       number: GPIO13
       mode: INPUT_PULLUP
       inverted: true # Active Low
-    name: "Spare 1"
-    id: spare_1
+    name: "Run Enabled"
+    id: run_enabled
 
   # 3. Engine Status/Alarm LEDs (GPIO 6-9)
   - platform: gpio
@@ -306,7 +309,6 @@ binary_sensor:
   - platform: template
     name: "Armed"
     id: armed 
-    # Use the new armed_adc ID
     # assumes cathode of led pulled to ground to illuminate
     lambda: return id(armed_adc).state < 1.0; 
     device_class: safety
