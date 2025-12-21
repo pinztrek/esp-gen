@@ -206,27 +206,31 @@ text_sensor:
 
   #---------------------------
   # Battery state calculation
+
   - platform: template
     name: "Battery Status"
     id: batt_status
     icon: "mdi:battery-check"
+    update_interval: 10s
     lambda: |-
       float v = id(battery_voltage).state;
 
-      // 1. Critical Fault Check (Voltage below 6V or sensor error)
-      if (std::isnan(v) || v < 6.0) {
+      // 1. Critical Fault Check (Voltage below 2V or sensor error)
+      if (std::isnan(v) || v < 2.0) {
         return {"Fault"};
       }
 
-      // 2. High Voltage (Equalization/Deep Charging)
-      if (v > 13.5) {
+      // 2. High Voltage / Charging States
+      if (v > 14.0) {
+        return {"Over Chg"};
+      } else if (v > 13.5) {
         return {"Equalize"};
       } else if (v > 12.6) {
         return {"Float Charge"};
       } else if (v > 12.1) {
         return {"Charging"};
-      } 
-      
+      }
+
       // 3. Resting Voltage (Standard Operation)
       else if (v >= 11.8) {
         return {"Full"};
@@ -236,13 +240,12 @@ text_sensor:
         return {"Medium"};
       } else if (v > 10.0) {
         return {"Low"};
-      } 
-      
+      }
+
       // 4. Depleted
       else {
         return {"Discharged"};
       }
-    update_interval: 60s
 
 #--------------------------------------------------------------------
 
