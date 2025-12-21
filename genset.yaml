@@ -141,48 +141,57 @@ text_sensor:
       #}
     #update_interval: 15s
 
-# --- LOGIC-BASED GENERATOR STATUS ---
+  #---------------------------
+  # --- LOGIC-BASED GENERATOR STATUS ---
   - platform: template
     name: "Generator Status"
     id: generator_status
-    icon: "mdi:engine"
     update_interval: 1s
     lambda: |-
       // 1. Check for Critical Alarms (Highest Priority)
       if (id(low_oil).state || id(over_temp).state || id(over_crank).state || id(over_speed).state || id(alarm_status).state) {
+        id(generator_status).set_icon("mdi:alert-outline");
         return {"Alarm/Fault"};
       }
 
       // 2. Check for Active Power Generation
       if (id(gen_phase_1).state && id(gen_phase_2).state) {
         if (id(xfer_sw).state) {
+          id(generator_status).set_icon("mdi:lightning-bolt");
           return {"Generating"};
+        } else {
+          id(generator_status).set_icon("mdi:lightning-bolt-outline");
+          return {"Running"};
         }
-        return {"Running"};
       }
 
       // 3. Check for Starting Sequence
       if (id(starting).state) {
+        id(generator_status).set_icon("mdi:engine-outline");
         return {"Starting"};
       }
 
-      // 4. Check for Readiness (Auto Enabled and mains live)
+      // 4. MAIN & AUTO TRUE -> Show Plug (Normal Standby)
       if (id(auto_enabled).state && id(mains).state) {
+        id(generator_status).set_icon("mdi:power-plug");
         return {"Standby"};
       }
 
-      // 4. Check for Readiness (Auto Enabled and mains live)
-      if (id(auto_enabled).state && ! id(mains).state) {
+      // 5. AUTO TRUE but NO MAINS -> Show Shield (Armed for Outage)
+      if (id(auto_enabled).state && !id(mains).state) {
+        id(generator_status).set_icon("mdi:shield-check");
         return {"Standby Outage"};
       }
 
-      // 5. Check if Utility/Mains power is present while stopped
+      // 6. IF WE REACH HERE, IT IS MANUAL (Show Hand)
+      id(generator_status).set_icon("mdi:hand-back-left");
+      
       if (id(mains).state) {
-        return {"Mains Active"};
+        return {"Mains Active (Man)"};
       }
 
       return {"Off/Manual"};
-
+  #---------------------------
   # Battery state calculation
   - platform: template
     name: "Battery Status"
