@@ -183,7 +183,46 @@ text_sensor:
 
       return {"Off/Manual"};
 
-# --- PERIODIC REFRESH INTERVAL workaround for binary sensors ---
+  # Battery state calculation
+  - platform: template
+    name: "Battery Status"
+    id: batt_status
+    icon: "mdi:battery-check"
+    lambda: |-
+      float v = id(battery_voltage).state;
+
+      // 1. Critical Fault Check (Voltage below 6V or sensor error)
+      if (std::isnan(v) || v < 6.0) {
+        return {"Fault"};
+      }
+
+      // 2. High Voltage (Equalization/Deep Charging)
+      if (v > 13.5) {
+        return {"Equalize"};
+      } else if (v > 12.6) {
+        return {"Float Charge"};
+      } else if (v > 12.1) {
+        return {"Charging"};
+      } 
+      
+      // 3. Resting Voltage (Standard Operation)
+      else if (v >= 11.8) {
+        return {"Full"};
+      } else if (v >= 11.3) {
+        return {"Good"};
+      } else if (v >= 10.8) {
+        return {"Medium"};
+      } else if (v > 10.0) {
+        return {"Low"};
+      } 
+      
+      // 4. Depleted
+      else {
+        return {"Discharged"};
+      }
+    update_interval: 60s
+
+#--------------------------------------------------------------------
 
 interval:
 
