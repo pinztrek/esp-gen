@@ -142,15 +142,18 @@ text_sensor:
     #update_interval: 15s
 
   #---------------------------
-
+  # --- LOGIC-BASED GENERATOR STATUS (TEXT ONLY) ---
   - platform: template
     name: "Generator Status"
     id: generator_status
     update_interval: 1s
     lambda: |-
+      // 1. Priority: Alarms
       if (id(low_oil).state || id(over_temp).state || id(over_crank).state || id(over_speed).state || id(alarm_status).state) {
         return {"Alarm/Fault"};
       }
+      
+      // 2. Priority: Running/Generating
       if (id(gen_phase_1).state && id(gen_phase_2).state) {
         if (id(xfer_sw).state) {
           return {"Generating"};
@@ -158,9 +161,13 @@ text_sensor:
           return {"Running"};
         }
       }
+      
+      // 3. Priority: Starting
       if (id(starting).state) {
         return {"Starting"};
       }
+      
+      // 4. Priority: Standby (Auto Mode)
       if (id(auto_enabled).state) {
         if (id(mains).state) {
           return {"Standby"};
@@ -168,10 +175,15 @@ text_sensor:
           return {"Standby Outage"};
         }
       }
+      
+      // 5. Priority: Manual Mode with Mains present
       if (id(mains).state) {
         return {"Mains Active (Man)"};
       }
+      
+      // 6. Default Fallback
       return {"Off/Manual"};
+
   #---------------------------
   # Battery state calculation
   - platform: template
@@ -262,33 +274,6 @@ interval:
           id: over_speed
           state: !lambda 'return id(over_speed).state;'
 
-  #---------------------------------------
-  # update icon if it changes
-  - interval: 1s
-    then:
-      - lambda: |-
-          std::string current_state = id(generator_status).state;
-          static std::string last_sent_state = "";
-
-          if (!current_state.empty() && current_state != last_sent_state) {
-            const char* new_icon = "mdi:hand-back-left"; // Fallback
-
-            // Use .find() to be safe against hidden spaces/formatting
-            if      (current_state.find("Standby Outage") != std::string::npos) new_icon = "mdi:shield-check";
-            else if (current_state.find("Standby") != std::string::npos)        new_icon = "mdi:power-plug";
-            else if (current_state.find("Generating") != std::string::npos)     new_icon = "mdi:lightning-bolt";
-            else if (current_state.find("Running") != std::string::npos)        new_icon = "mdi:lightning-bolt-outline";
-            else if (current_state.find("Starting") != std::string::npos)       new_icon = "mdi:engine-outline";
-            else if (current_state.find("Alarm") != std::string::npos)          new_icon = "mdi:alert-outline";
-
-            id(generator_status).set_icon(new_icon);
-            
-            // This is the critical "Push" to Home Assistant
-            id(generator_status).publish_state(current_state);
-            
-            last_sent_state = current_state;
-            ESP_LOGD("icon_logic", "Matched icon %s for state %s", new_icon, current_state.c_str());
-          }
 #-------------------------------------------------------
 # --- BINARY SENSORS ---
 binary_sensor:
