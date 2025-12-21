@@ -142,47 +142,45 @@ text_sensor:
     #update_interval: 15s
 
   #---------------------------
-  # --- LOGIC-BASED GENERATOR STATUS (TEXT ONLY) ---
   - platform: template
     name: "Generator Status"
     id: generator_status
     update_interval: 1s
     lambda: |-
-      // 1. Priority: Alarms
+      // 1. Highest Priority: Critical Alarms
       if (id(low_oil).state || id(over_temp).state || id(over_crank).state || id(over_speed).state || id(alarm_status).state) {
         return {"Alarm/Fault"};
       }
-      
-      // 2. Priority: Running/Generating
+
+      // 2. Engine & Power (Physical Reality)
       if (id(gen_phase_1).state && id(gen_phase_2).state) {
         if (id(xfer_sw).state) {
           return {"Generating"};
-        } else {
-          return {"Running"};
         }
+        return {"Running"};
       }
-      
-      // 3. Priority: Starting
+
+      // 3. Transitional State
       if (id(starting).state) {
         return {"Starting"};
       }
-      
-      // 4. Priority: Standby (Auto Mode)
+
+      // 4. Standby (Only if Auto is ENABLED)
       if (id(auto_enabled).state) {
         if (id(mains).state) {
           return {"Standby"};
-        } else {
-          return {"Standby Outage"};
         }
+        return {"Standby Outage"};
       }
-      
-      // 5. Priority: Manual Mode with Mains present
+
+      // 5. Manual Mode (Only if Auto is DISABLED)
       if (id(mains).state) {
         return {"Mains Active (Man)"};
       }
-      
-      // 6. Default Fallback
+
+      // 6. Absolute Fallback (Prevents the "non-void function" error)
       return {"Off/Manual"};
+
 
   #---------------------------
   # Battery state calculation
