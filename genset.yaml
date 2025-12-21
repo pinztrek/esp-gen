@@ -147,38 +147,52 @@ text_sensor:
     id: generator_status
     update_interval: 1s
     lambda: |-
-      // 1. Highest Priority: Critical Alarms
+      // 1. CRITICAL: Faults always take top priority
       if (id(low_oil).state || id(over_temp).state || id(over_crank).state || id(over_speed).state || id(alarm_status).state) {
         return {"Alarm/Fault"};
       }
 
-      // 2. Engine & Power (Physical Reality)
-      if (id(gen_phase_1).state && id(gen_phase_2).state) {
-        if (id(xfer_sw).state) {
-          return {"Generating"};
-        }
-        return {"Running"};
+      // 2. GENERATING: Engine running AND Transfer Switch is closed
+      if (id(gen_phase_1).state && id(gen_phase_2).state && id(xfer_sw).state) {
+        return {"Generating"};
       }
 
-      // 3. Transitional State
+      // 3. EXERCISE / COOLDOWN: Engine running, Xfer open, Utility is ON
+      if (id(gen_phase_1).state && id(gen_phase_2).state && !id(xfer_sw).state && id(mains).state) {
+        return {"Exercise"};
+      }
+
+      // 4. WARMUP: Engine running, Xfer open, Utility is OFF
+      if (id(gen_phase_1).state && id(gen_phase_2).state && !id(xfer_sw).state && !id(mains).state) {
+        return {"Warmup"};
+      }
+
+      // 5. STARTING: Starter motor engaged
       if (id(starting).state) {
         return {"Starting"};
       }
 
-      // 4. Standby (Only if Auto is ENABLED)
-      if (id(auto_enabled).state) {
-        if (id(mains).state) {
-          return {"Standby"};
-        }
+      // 6. STANDBY OUTAGE: Auto-mode ON, Utility is OFF
+      if (id(auto_enabled).state && !id(mains).state) {
         return {"Standby Outage"};
       }
 
-      // 5. Manual Mode (Only if Auto is DISABLED)
-      if (id(mains).state) {
-        return {"Mains Active (Man)"};
+      // 7. STANDBY: Auto-mode ON, Utility is ON (Normal)
+      if (id(auto_enabled).state && id(mains).state) {
+        return {"Standby"};
       }
 
-      // 6. Absolute Fallback (Prevents the "non-void function" error)
+      // 8. MAINS MANUAL: Auto-mode OFF, Utility is ON
+      if (!id(auto_enabled).state && id(mains).state) {
+        return {"Mains Manual"};
+      }
+
+      // 9. OUTAGE MANUAL: Auto-mode OFF, Utility is OFF
+      if (!id(auto_enabled).state && !id(mains).state) {
+        return {"Outage Manual"};
+      }
+
+      // Absolute Fallback
       return {"Off/Manual"};
 
 
