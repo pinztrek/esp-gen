@@ -103,14 +103,22 @@ sensor:
     accuracy_decimals: 1
 
   # --- ADC INPUTS: ADC1 (GPIO27) and ADC2 (GPIO28) adjacent to AGND ---
+  # --- Battery Voltage (10s High-Frequency Reporting) ---
   - platform: adc
-    pin: GPIO27 # Pin 32 (ADC1) - Battery Voltage
+    pin: GPIO27 
     name: "Battery Voltage"
     id: battery_voltage
-    update_interval: 60s
+    update_interval: 10s  # Samples every 10 seconds
     unit_of_measurement: V
-    accuracy_decimals: 1
-    # lambda: return x * 5.0 / 4095.0 * 10.0; # Example scaling
+    accuracy_decimals: 2
+    filters:
+      # Scaling for 68k/10k divider
+      - multiply: 7.8
+      
+      # Smooths noise but reports every update
+      - sliding_window_moving_average:
+          window_size: 10
+          send_every: 1 # Set to 6 later for 60s reporting 
 
   - platform: adc
     pin: GPIO28 # Pin 34 (ADC2) - Armed Status
