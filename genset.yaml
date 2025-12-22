@@ -309,6 +309,7 @@ binary_sensor:
       inverted: true # Active Low
     name: "Alarm"
     id: alarm_status
+    device_class: safety
 
   - platform: gpio
     pin:
@@ -317,6 +318,8 @@ binary_sensor:
       inverted: true # Active Low
     name: "Gen Phase 2"
     id: gen_phase_2
+    device_class: power
+    #icon: "mdi:flash"
 
   - platform: gpio
     pin:
@@ -325,6 +328,8 @@ binary_sensor:
       inverted: true # Active Low
     name: "Gen Phase 1"
     id: gen_phase_1
+    device_class: power
+    #icon: "mdi:flash"
 
   - platform: gpio
     pin:
@@ -333,6 +338,8 @@ binary_sensor:
       inverted: true # Active Low
     name: "Mains"
     id: mains
+    device_class: power
+    icon: "mdi:flash"
 
   # 2. Control Logic Inputs (GPIO 10-13)
   - platform: gpio
@@ -342,6 +349,8 @@ binary_sensor:
       inverted: true # Active Low
     name: "Transfer Switch"
     id: xfer_sw
+    device_class: power
+    icon: "mdi:flash"
 
   - platform: gpio
     pin:
@@ -350,14 +359,17 @@ binary_sensor:
       inverted: true # Active Low
     name: "Starting"
     id: starting
+    device_class: power
+    icon: "mdi:rotate-right"
 
   - platform: gpio
     pin:
       number: GPIO12
       mode: INPUT_PULLUP
-      inverted: true # Active Low
+      #inverted: true # Active Low
     name: "Auto Enabled"
     id: auto_enabled
+    device_class: problem
 
   - platform: gpio
     pin:
@@ -375,6 +387,7 @@ binary_sensor:
       inverted: true # Active Low
     name: "Low Oil"
     id: low_oil
+    device_class: safety
 
   - platform: gpio
     pin:
@@ -383,6 +396,7 @@ binary_sensor:
       inverted: true # Active Low
     name: "Over Temp"
     id: over_temp
+    device_class: safety
 
   - platform: gpio
     pin:
@@ -391,6 +405,7 @@ binary_sensor:
       inverted: true # Active Low
     name: "Over Crank"
     id: over_crank
+    device_class: safety
 
   - platform: gpio
     pin:
@@ -399,6 +414,7 @@ binary_sensor:
       inverted: true # Active Low
     name: "Over Speed"
     id: over_speed
+    device_class: safety
 
   # New Binary Sensor: ON when voltage is high (Armed)
   - platform: template
